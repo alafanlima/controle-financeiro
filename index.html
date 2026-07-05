@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle A&amp;G</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --paper: #FFFFFF;
+    --paper-raised: #FFFFFF;
+    --ink: #103824;
+    --ink-soft: #5C7A68;
+    --line: #D3E6DA;
+    --gold: #2F7D52;
+    --gold-soft: #B7E4C7;
+    --brick: #1B5E3A;
+    --brick-soft: #E3F3E9;
+    --teal: #1F7A5C;
+    --teal-soft: #D4F0E2;
+    --navy: #0B4028;
+    --navy-soft: #DCEFE3;
+    --radius: 6px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .num{font-family:'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;}
+  h1,h2,h3,.display{font-family:'Fraunces', serif;}
+  #shell{display:flex; min-height:100vh;}
+
+  /* LOGIN */
+  #loginScreen{
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(47,125,82,.18), transparent 45%),
+      radial-gradient(circle at 85% 80%, rgba(31,122,92,.18), transparent 45%),
+      var(--ink);
+    padding:20px;
+  }
+  .login-card{
+    width:100%; max-width:400px; background:var(--paper-raised);
+    border-radius:10px; padding:38px 36px; box-shadow:0 20px 50px rgba(0,0,0,.35);
+  }
+  .login-card .brand{font-family:'Fraunces',serif; font-size:26px; font-weight:600; color:var(--ink); margin-bottom:2px;}
+  .login-card .brand-sub{font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:26px;}
+  .user-pick{display:flex; gap:10px; margin-bottom:20px;}
+  .user-chip{
+    flex:1; border:1px solid var(--line); border-radius:8px; padding:14px 10px; text-align:center;
+    cursor:pointer; background:#fff; transition:all .15s ease; font-weight:600; font-size:14px;
+  }
+  .user-chip:hover{border-color:var(--gold);}
+  .user-chip.active{background:var(--ink); color:var(--gold-soft); border-color:var(--ink);}
+  .field label{display:block; font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--ink-soft); margin-bottom:5px;}
+  .field input{width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:var(--radius); background:#fff; font-family:'IBM Plex Sans',sans-serif; font-size:14px; margin-bottom:14px;}
+  .login-error{color:var(--brick); font-size:13px; margin:-4px 0 14px 0; min-height:16px;}
+  .btn-full{width:100%; justify-content:center;}
+  .login-toggle{text-align:center; margin-top:16px; font-size:13px; color:var(--ink-soft);}
+  .login-toggle a{color:var(--gold); font-weight:600; cursor:pointer; text-decoration:none;}
+  .login-note{font-size:11.5px; color:var(--ink-soft); margin-top:18px; line-height:1.5; border-top:1px solid var(--line); padding-top:14px;}
+
+  /* SIDEBAR */
+  #sidebar{
+    width:230px; flex-shrink:0;
+    background:var(--ink);
+    color:var(--paper-raised);
+    padding:28px 18px;
+    display:flex; flex-direction:column;
+    position:sticky; top:0; height:100vh;
+  }
+  #sidebar .brand{
+    font-family:'Fraunces', serif;
+    font-size:22px; font-weight:600;
+    letter-spacing:.3px;
+    margin-bottom:4px;
+    color:var(--gold-soft);
+  }
+  #sidebar .brand-sub{
+    font-size:11px; color:#9CA894; text-transform:uppercase; letter-spacing:1.5px;
+    margin-bottom:22px;
+  }
+  .user-badge{
+    display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.06);
+    border-radius:var(--radius); padding:10px 12px; margin-bottom:24px;
+  }
+  .user-avatar{
+    width:32px; height:32px; border-radius:50%; background:var(--gold); color:var(--ink);
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;
+  }
+  .user-badge .uname{font-size:13.5px; font-weight:600; color:#fff;}
+  .user-badge .logout{font-size:11px; color:#9CA894; cursor:pointer; text-decoration:underline;}
+  .nav-item{
+    display:flex; align-items:center; gap:10px;
+    padding:11px 12px; border-radius:var(--radius);
+    color:#C7CFC0; font-size:14.5px; font-weight:500;
+    cursor:pointer; margin-bottom:4px;
+    border-left:3px solid transparent;
+    transition:background .15s ease, color .15s ease;
+  }
+  .nav-item:hover{background:rgba(255,255,255,.06); color:#fff;}
+  .nav-item.active{
+    background:rgba(185,139,42,.16);
+    color:var(--gold-soft);
+    border-left:3px solid var(--gold);
+  }
+  .nav-item .dot{width:6px;height:6px;border-radius:50%;background:currentColor; opacity:.6; flex-shrink:0;}
+  #sidebar .year-block{margin-top:auto; padding-top:20px; border-top:1px solid rgba(255,255,255,.12);}
+  #sidebar .year-label{font-size:11px; color:#9CA894; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;}
+  select#yearSelect{
+    width:100%; background:rgba(255,255,255,.08); color:#fff; border:1px solid rgba(255,255,255,.18);
+    border-radius:var(--radius); padding:8px 10px; font-family:'IBM Plex Mono',monospace; font-size:13px;
+  }
+
+  /* MAIN */
+  #main{flex:1; padding:36px 44px; max-width:1180px;}
+  .page-title{font-size:28px; font-weight:600; margin:0 0 4px 0;}
+  .page-sub{color:var(--ink-soft); font-size:14px; margin:0 0 28px 0;}
+
+  .cards-row{display:grid; grid-template-columns:repeat(auto-fit, minmax(210px,1fr)); gap:14px; margin-bottom:28px;}
+  .card{
+    background:var(--paper-raised); border:1px solid var(--line); border-radius:var(--radius);
+    padding:18px 18px; position:relative; overflow:hidden;
+  }
+  .card .label{font-size:11.5px; text-transform:uppercase; letter-spacing:1px; color:var(--ink-soft); margin-bottom:8px;}
+  .card .value{font-family:'IBM Plex Mono',monospace; font-size:24px; font-weight:600;}
+  .card.teal{border-left:4px solid var(--teal);}
+  .card.brick{border-left:4px solid var(--brick);}
+  .card.gold{border-left:4px solid var(--gold);}
+  .card.navy{border-left:4px solid var(--navy);}
+
+  .panel{
+    background:var(--paper-raised); border:1px solid var(--line); border-radius:var(--radius);
+    padding:22px 24px; margin-bottom:24px;
+  }
+  .panel h3{margin:0 0 14px 0; font-size:17px; font-weight:600;}
+  .panel-flex{display:grid; grid-template-columns:1.3fr 1fr; gap:20px;}
+  @media (max-width:900px){.panel-flex{grid-template-columns:1fr;}}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{
+    text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.6px;
+    color:var(--ink-soft); border-bottom:1px solid var(--line); padding:8px 6px; white-space:nowrap;
+  }
+  td{padding:6px; border-bottom:1px solid rgba(201,191,166,.5); vertical-align:middle;}
+  tr:hover td{background:rgba(185,139,42,.05);}
+  input[type=number], input[type=text], input[type=password], select.cell{
+    width:100%; border:1px solid transparent; background:transparent;
+    padding:5px 4px; font-family:'IBM Plex Mono',monospace; font-size:12.5px; border-radius:4px; color:var(--ink);
+  }
+  input[type=text]{font-family:'IBM Plex Sans',sans-serif; font-size:13px;}
+  input[type=number]:hover, input[type=text]:hover, select.cell:hover{border-color:var(--line); background:#fff;}
+  input[type=number]:focus, input[type=text]:focus, select.cell:focus{outline:none; border-color:var(--gold); background:#fff;}
+  .month-input{width:64px;}
+  .tag{
+    display:inline-block; font-size:10.5px; padding:2px 8px; border-radius:20px;
+    font-weight:600; letter-spacing:.3px;
+  }
+  .tag.Fixo{background:var(--navy-soft); color:var(--navy);}
+  .tag.Variável{background:var(--gold-soft); color:#6b5316;}
+  .tag.Eventual{background:var(--brick-soft); color:var(--brick);}
+  .tag.Investimento{background:var(--teal-soft); color:var(--teal);}
+
+  .btn{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--ink); color:var(--paper-raised); border:none;
+    padding:9px 16px; border-radius:var(--radius); font-size:13px; font-weight:600;
+    cursor:pointer; font-family:'IBM Plex Sans',sans-serif;
+  }
+  .btn:hover{background:#38492f;}
+  .btn.ghost{background:transparent; color:var(--ink); border:1px solid var(--line);}
+  .btn.ghost:hover{background:rgba(0,0,0,.04);}
+  .btn.danger{background:transparent; color:var(--brick); padding:4px 8px; font-size:12px;}
+  .btn.small{padding:5px 10px; font-size:12px;}
+
+  .table-scroll{overflow-x:auto;}
+  .table-actions{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+  .total-row td{font-weight:700; border-top:2px solid var(--ink); border-bottom:none; background:rgba(0,0,0,.02);}
+
+  .progress-track{width:100%; height:12px; background:#fff; border:1px solid var(--line); border-radius:20px; overflow:hidden; margin:14px 0 6px 0;}
+  .progress-fill{height:100%; background:linear-gradient(90deg, var(--teal), var(--gold)); border-radius:20px; transition:width .4s ease;}
+
+  .inputs-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:8px;}
+  .field label{display:block; font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--ink-soft); margin-bottom:5px;}
+  .field input{width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:var(--radius); background:#fff; font-family:'IBM Plex Mono',monospace; font-size:13.5px;}
+
+  .muted{color:var(--ink-soft); font-size:12.5px;}
+  .loading{padding:60px; text-align:center; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace;}
+  ::-webkit-scrollbar{height:8px; width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--line); border-radius:6px;}
+</style>
+</head>
+<body>
+<div id="root"><div class="loading">Carregando…</div></div>
+
+<script>
+const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const CATEGORIAS = ['Moradia','Transporte','Alimentação','Lazer','Educação','Saúde','Contas Mensais','Crédito','Impostos','Vestuário','Investimento','Outros'];
+const TIPOS_CUSTO = ['Fixo','Variável','Eventual','Investimento'];
+const FORMAS_PAGAMENTO = ['Débito','Cartão de crédito'];
+const YEARS = [2025,2026,2027,2028];
+let ocultarValores = false;
+const BRL = v => ocultarValores ? 'R$ ••••••' : (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const uid = () => Math.random().toString(36).slice(2,10);
+
+let users = [];          // {username, displayName, password}
+let currentUser = null;  // {username, displayName}
+let state = { year: 2026, month: new Date().getMonth(), entradas: [], despesas: [], cartao: [], eliene: [], emprestimos: [], invest: {} };
+let charts = {};
+let activeTab = 'painel';
+let loginMode = 'entrar'; // 'entrar' | 'cadastrar'
+let selectedUsername = null;
+
+function zeros(){ return new Array(12).fill(0); }
+function initials(name){ return name.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
+
+/* ---------------- STORAGE ADAPTER ----------------
+   Usa window.storage (nuvem, dados compartilhados) quando o app roda dentro
+   do Claude.ai. Se o arquivo for aberto direto no navegador (fora do chat),
+   window.storage não existe, então usamos localStorage do próprio navegador
+   como alternativa — os dados ficam salvos só naquele computador/navegador. */
+const hasCloudStorage = (typeof window.storage !== 'undefined' && window.storage !== null);
+async function storageGet(key){
+  if(hasCloudStorage) return await window.storage.get(key, true);
+  const v = localStorage.getItem(key);
+  if(v===null) throw new Error('not found: '+key);
+  return { key, value:v };
+}
+async function storageSet(key, value){
+  if(hasCloudStorage) return await window.storage.set(key, value, true);
+  localStorage.setItem(key, value);
+  return { key, value };
+}
+
+/* ---------------- SEED DATA ---------------- */
+function seedUsers(){
+  return [
+    {username:'alafan', displayName:'Alafan', password:'1234'},
+    {username:'giulianne', displayName:'Giulianne', password:'1234'},
+  ];
+}
+function seedDespesas(username){
+  if(username==='alafan') return [
+    {id:uid(), subcategoria:'Aluguel', categoria:'Moradia', tipoCusto:'Fixo', valores:[325,325,400,400,400,280,400,400,400,400,400,400]},
+    {id:uid(), subcategoria:'Taxa condomínio', categoria:'Moradia', tipoCusto:'Fixo', valores:[255,255,255,255,255,255,255,255,255,255,255,255]},
+    {id:uid(), subcategoria:'Energia', categoria:'Contas Mensais', tipoCusto:'Variável', valores:[118.10,126.05,150,62.59,80,92.12,90,90,90,90,90,90]},
+    {id:uid(), subcategoria:'Plano celular', categoria:'Contas Mensais', tipoCusto:'Fixo', valores:[48,63,48,48,48,55,55,55,55,55,55,55]},
+    {id:uid(), subcategoria:'Internet', categoria:'Contas Mensais', tipoCusto:'Fixo', valores:[0,130,130,130,130,130,130,130,130,130,130,130]},
+    {id:uid(), subcategoria:'Parcela do carro', categoria:'Transporte', tipoCusto:'Fixo', valores:[640,640,640,640,640,640,640,640,640,640,640,640]},
+    {id:uid(), subcategoria:'Combustível', categoria:'Transporte', tipoCusto:'Variável', valores:[185.86,97,124,137,137,100,137,137,137,137,137,137]},
+    {id:uid(), subcategoria:'IPVA + Licenciamento', categoria:'Impostos', tipoCusto:'Eventual', valores:[911.86,0,0,0,0,0,0,0,0,400,200,600]},
+    {id:uid(), subcategoria:'Mercado', categoria:'Alimentação', tipoCusto:'Variável', valores:[671.11,807,467,924,700,348,700,700,700,700,700,700]},
+    {id:uid(), subcategoria:'Graduação + educação', categoria:'Educação', tipoCusto:'Variável', valores:[909,909,909,0,0,0,0,0,0,0,0,0]},
+    {id:uid(), subcategoria:'Academia', categoria:'Lazer', tipoCusto:'Fixo', valores:[210,210,210,210,210,210,210,210,210,210,210,210]},
+    {id:uid(), subcategoria:'Netflix + Amazon', categoria:'Lazer', tipoCusto:'Fixo', valores:[78,63,78,78,78,59.95,59.95,59.95,59.95,59.95,59.95,59.95]},
+    {id:uid(), subcategoria:'Reserva de emergência', categoria:'Investimento', tipoCusto:'Investimento', valores:[800,800,0,800,800,0,800,800,800,800,800,800]},
+  ];
+  if(username==='giulianne') return [
+    {id:uid(), subcategoria:'Aluguel', categoria:'Moradia', tipoCusto:'Fixo', valores:[325,325,400,400,400,400,400,400,400,400,400,400]},
+    {id:uid(), subcategoria:'Condomínio', categoria:'Moradia', tipoCusto:'Fixo', valores:[148,18,255.29,255.28,255.28,255.28,255.28,255.28,255.28,255.28,255.28,255.28]},
+    {id:uid(), subcategoria:'Financiamento', categoria:'Moradia', tipoCusto:'Fixo', valores:[0,255.29,738.33,825.34,826.29,827.96,825.34,825.34,825.34,825.34,825.34,825.34]},
+    {id:uid(), subcategoria:'Energia', categoria:'Contas Mensais', tipoCusto:'Variável', valores:[118.10,126.05,0,62.59,68.30,92.12,92.12,92.12,92.12,92.12,92.12,92.12]},
+    {id:uid(), subcategoria:'Água', categoria:'Contas Mensais', tipoCusto:'Variável', valores:[185,40,0,7.5,7.5,7.5,7.5,7.5,7.5,7.5,7.5,7.5]},
+    {id:uid(), subcategoria:'Plano celular', categoria:'Contas Mensais', tipoCusto:'Fixo', valores:[49,49,55,55,56,56,56,56,56,56,56,56]},
+    {id:uid(), subcategoria:'Cartão Nubank', categoria:'Crédito', tipoCusto:'Fixo', valores:[1225.32,202.10,497,83.22,290.03,196.49,0,0,0,0,0,0]},
+    {id:uid(), subcategoria:'Cartão Itaú', categoria:'Crédito', tipoCusto:'Fixo', valores:[0,997.90,1580,1250.78,676.18,905.09,162.38,500,0,0,0,0]},
+    {id:uid(), subcategoria:'Combustível', categoria:'Transporte', tipoCusto:'Variável', valores:[90,206.34,0,137,255.2,96.85,100,137,137,137,137,137]},
+    {id:uid(), subcategoria:'Mercado + Padaria', categoria:'Alimentação', tipoCusto:'Variável', valores:[900,867.22,0,697.61,700,1000,811.49,700,700,700,700,700]},
+    {id:uid(), subcategoria:'Depilação a Laser', categoria:'Saúde', tipoCusto:'Variável', valores:[128.89,128.89,0,128.89,128.89,0,0,0,0,0,0,0]},
+    {id:uid(), subcategoria:'Viagem / Férias', categoria:'Lazer', tipoCusto:'Eventual', valores:[0,225,225,0,0,1401.13,821.30,899.87,2351.10,0,0,0]},
+    {id:uid(), subcategoria:'Reserva de emergência', categoria:'Investimento', tipoCusto:'Investimento', valores:[800,800,318.77,800,800,0,800,800,800,800,800,800]},
+  ];
+  return [];
+}
+function seedEntradas(username){
+  if(username==='alafan') return [
+    {id:uid(), descricao:'Salário', valores:[5250,5226,5226,7220.69,5232,5232,5232,5232,5232,5232,5232,5232]},
+  ];
+  if(username==='giulianne') return [
+    {id:uid(), descricao:'Salário', valores:[4666.29,4544.56,4544.56,6366.47,4732.13,4732.13,4732.13,4732.13,4732.13,4732.13,4732.13,4732.13]},
+  ];
+  return [];
+}
+function seedInvest(username){
+  if(username==='alafan') return { saldoAtual:14009.81, aporteMensal:2600, taxaMensal:1.0, meta:500000, dataBase: '2025-09-01' };
+  if(username==='giulianne') return { saldoAtual:7000, aporteMensal:1300, taxaMensal:1.0, meta:500000, dataBase: '2025-09-01' };
+  return { saldoAtual:0, aporteMensal:0, taxaMensal:1.0, meta:500000, dataBase: new Date().toISOString().slice(0,10) };
+}
+
+/* Lançamentos diários do cartão referentes à fatura compartilhada,
+   já divididos entre Giulianne e Alafan (a parte da Eliene fica à parte, ver seedEliene). */
+function seedCartao(username, year){
+  if(year !== 2026) return [];
+  if(username==='giulianne') return [
+    {id:uid(), data:'2026-03-29', descricao:'DSO Cursos Preparatórios (04/06)', conta:'Educação', valor:69.89},
+    {id:uid(), data:'2026-05-02', descricao:'Raia Drogasil (03/03)', conta:'Saúde', valor:94.96},
+    {id:uid(), data:'2026-06-05', descricao:'LATAM Air (02/02)', conta:'Viagem', valor:416.18},
+    {id:uid(), data:'2026-06-09', descricao:'Airbnb (02/03)', conta:'Viagem', valor:216.28},
+    {id:uid(), data:'2026-06-25', descricao:'Ns de Souza comércio', conta:'Mercado', valor:13.00},
+    {id:uid(), data:'2026-06-25', descricao:'Ituxi', conta:'Mercado', valor:18.23},
+    {id:uid(), data:'2026-06-27', descricao:'Ituxi', conta:'Mercado', valor:48.29},
+    {id:uid(), data:'2026-06-27', descricao:'Marcelo da Silva', conta:'Mercado', valor:25.94},
+    {id:uid(), data:'2026-06-27', descricao:'Marcelo da Silva', conta:'Mercado', valor:14.23},
+    {id:uid(), data:'2026-06-29', descricao:'Alvaro de Oliveira', conta:'Mercado', valor:6.50},
+    {id:uid(), data:'2026-06-29', descricao:'A B Soares comércio', conta:'Mercado', valor:39.61},
+    {id:uid(), data:'2026-06-29', descricao:'Mp Felipe Leal', conta:'Mercado', valor:5.00},
+    {id:uid(), data:'2026-06-29', descricao:'Mp Felipe Leal', conta:'Mercado', valor:18.50},
+    {id:uid(), data:'2026-07-01', descricao:'Conta Vivo', conta:'Celular', valor:55.00},
+    {id:uid(), data:'2026-07-01', descricao:'Apple.com', conta:'Celular', valor:19.90},
+    {id:uid(), data:'2026-07-04', descricao:'Carrefour', conta:'Mercado', valor:576.71},
+    {id:uid(), data:'2026-07-04', descricao:'Natura', conta:'Perfume', valor:99.95},
+    {id:uid(), data:'2026-07-05', descricao:'Marcelo da Silva', conta:'Mercado', valor:45.50},
+    {id:uid(), data:'2026-07-05', descricao:'Café Regional', conta:'Restaurante', valor:31.50},
+    {id:uid(), data:'2026-07-05', descricao:'Anuidade Latam', conta:'Cartão', valor:93.90},
+  ];
+  if(username==='alafan') return [
+    {id:uid(), data:'2026-03-29', descricao:'DSO Cursos Preparatórios (04/06)', conta:'Educação', valor:69.89},
+    {id:uid(), data:'2026-05-02', descricao:'Raia Drogasil (03/03)', conta:'Saúde', valor:94.96},
+    {id:uid(), data:'2026-05-24', descricao:'QConcursos (03/04)', conta:'Educação', valor:68.70},
+    {id:uid(), data:'2026-06-05', descricao:'LATAM Air (02/02)', conta:'Viagem', valor:416.18},
+    {id:uid(), data:'2026-06-09', descricao:'Airbnb (02/03)', conta:'Viagem', valor:216.28},
+    {id:uid(), data:'2026-06-25', descricao:'Ns de Souza comércio', conta:'Mercado', valor:13.00},
+    {id:uid(), data:'2026-06-25', descricao:'Ituxi', conta:'Mercado', valor:18.23},
+    {id:uid(), data:'2026-06-27', descricao:'Ituxi', conta:'Mercado', valor:48.29},
+    {id:uid(), data:'2026-06-27', descricao:'Marcelo da Silva', conta:'Mercado', valor:25.94},
+    {id:uid(), data:'2026-06-27', descricao:'Tempero de Casa', conta:'Restaurante', valor:36.00},
+    {id:uid(), data:'2026-06-27', descricao:'Marcelo da Silva', conta:'Mercado', valor:14.23},
+    {id:uid(), data:'2026-06-29', descricao:'Netflix', conta:'TV assinatura', valor:59.90},
+    {id:uid(), data:'2026-06-29', descricao:'Alvaro de Oliveira', conta:'Mercado', valor:6.50},
+    {id:uid(), data:'2026-06-29', descricao:'A B Soares comércio', conta:'Mercado', valor:39.61},
+    {id:uid(), data:'2026-06-29', descricao:'Mp Felipe Leal', conta:'Mercado', valor:5.00},
+    {id:uid(), data:'2026-06-29', descricao:'Mp Felipe Leal', conta:'Mercado', valor:18.50},
+    {id:uid(), data:'2026-07-04', descricao:'Chhurrasco Fabi', conta:'Restaurante', valor:40.00},
+    {id:uid(), data:'2026-07-04', descricao:'Pharmapelle', conta:'Drogaria', valor:196.10},
+    {id:uid(), data:'2026-07-04', descricao:'Carrefour', conta:'Mercado', valor:576.71},
+    {id:uid(), data:'2026-07-05', descricao:'Marcelo da Silva', conta:'Mercado', valor:45.50},
+    {id:uid(), data:'2026-07-05', descricao:'Café Regional', conta:'Restaurante', valor:31.50},
+    {id:uid(), data:'2026-07-05', descricao:'Anuidade Latam', conta:'Cartão', valor:93.90},
+  ];
+  return [];
+}
+
+/* Gastos da Eliene na mesma fatura — apenas informativo, não soma nas despesas
+   de nenhum usuário. Compartilhado entre os dois logins (não é por usuário). */
+function seedEliene(year){
+  if(year !== 2026) return [];
+  return [
+    {id:uid(), data:'2026-03-14', descricao:'Grupo Casas Bahia (05/10)', conta:'Vestuário', valor:309.66},
+    {id:uid(), data:'2026-04-04', descricao:'Bemol (04/10)', conta:'Vestuário', valor:168.90},
+    {id:uid(), data:'2026-04-18', descricao:'Manauara Mix (04/04)', conta:'Vestuário', valor:75.00},
+    {id:uid(), data:'2026-05-14', descricao:'Asya Fashion (03/05)', conta:'Vestuário', valor:163.98},
+    {id:uid(), data:'2026-05-15', descricao:'Asya Fashion (03/03)', conta:'Vestuário', valor:96.66},
+    {id:uid(), data:'2026-05-28', descricao:'Grupo Casas Bahia (02/10)', conta:'Vestuário', valor:105.34},
+    {id:uid(), data:'2026-05-28', descricao:'V. M. Bentes (02/02)', conta:'Tecido', valor:408.15},
+    {id:uid(), data:'2026-06-03', descricao:'Armarinho Dora (02/02)', conta:'Tecido', valor:52.05},
+    {id:uid(), data:'2026-06-05', descricao:'Pague Menos (02/02)', conta:'Saúde', valor:50.42},
+    {id:uid(), data:'2026-06-07', descricao:'Asya Fashion (02/02)', conta:'Vestuário', valor:75.99},
+    {id:uid(), data:'2026-06-07', descricao:'Asya Fashion (02/03)', conta:'Vestuário', valor:44.34},
+    {id:uid(), data:'2026-07-01', descricao:'Oboticário (01/08)', conta:'Perfume', valor:262.74},
+  ];
+}
+
+/* Parcelas seguintes das compras que ainda não terminaram de parcelar, para o cartão
+   de Giulianne/Alafan. As parcelas que já chegaram na última (X/X) não geram mais nada. */
+function seedCartaoParcelas(username, year){
+  if(year!==2026) return [];
+  if(username==='giulianne' || username==='alafan') return [
+    {id:uid(), data:'2026-04-29', descricao:'DSO Cursos Preparatórios (05/06)', conta:'Educação', valor:69.89},
+    {id:uid(), data:'2026-05-29', descricao:'DSO Cursos Preparatórios (06/06)', conta:'Educação', valor:69.89},
+    {id:uid(), data:'2026-07-09', descricao:'Airbnb (03/03)', conta:'Viagem', valor:216.28},
+  ];
+  return [];
+}
+
+/* Correção: faltava a parcela final do QConcursos (só do Alafan, a compra original era 03/04). */
+function seedCartaoParcelas2(username, year){
+  if(year!==2026) return [];
+  if(username==='alafan') return [
+    {id:uid(), data:'2026-06-24', descricao:'QConcursos (04/04)', conta:'Educação', valor:68.70},
+  ];
+  return [];
+}
+
+/* Contas que antes não tinham divisão entre Giu/Alaf e agora foram preenchidas
+   (esta é a parcela que já estava na planilha original). */
+function seedCartaoExtras(username, year){
+  if(year!==2026) return [];
+  if(username==='giulianne' || username==='alafan') return [
+    {id:uid(), data:'2026-05-02', descricao:'Arlesson Celula (03/03)', conta:'Eletrônicos', valor:106.67},
+    {id:uid(), data:'2026-05-02', descricao:'ILA Tintas (03/03)', conta:'Moto', valor:97.00},
+    {id:uid(), data:'2026-05-05', descricao:'JIM.COM AMOCA (03/04)', conta:'Carro', valor:450.24},
+  ];
+  return [];
+}
+
+/* Parcelas anteriores e seguintes dessas mesmas compras, para elas ficarem
+   visíveis em todos os meses do parcelamento (e não só na parcela informada). */
+function seedCartaoExtras2(username, year){
+  if(year!==2026) return [];
+  if(username==='giulianne' || username==='alafan') return [
+    {id:uid(), data:'2026-03-02', descricao:'Arlesson Celula (01/03)', conta:'Eletrônicos', valor:106.67},
+    {id:uid(), data:'2026-04-02', descricao:'Arlesson Celula (02/03)', conta:'Eletrônicos', valor:106.67},
+    {id:uid(), data:'2026-03-02', descricao:'ILA Tintas (01/03)', conta:'Moto', valor:97.00},
+    {id:uid(), data:'2026-04-02', descricao:'ILA Tintas (02/03)', conta:'Moto', valor:97.00},
+    {id:uid(), data:'2026-03-05', descricao:'JIM.COM AMOCA (01/04)', conta:'Carro', valor:450.24},
+    {id:uid(), data:'2026-04-05', descricao:'JIM.COM AMOCA (02/04)', conta:'Carro', valor:450.24},
+    {id:uid(), data:'2026-06-05', descricao:'JIM.COM AMOCA (04/04)', conta:'Carro', valor:450.24},
+  ];
+  return [];
+}
+
+/* Parcelas seguintes das compras parceladas da Eliene. */
+function seedElieneParcelas(year){
+  if(year===2026) return [
+    {id:uid(), data:'2026-04-14', descricao:'Grupo Casas Bahia (06/10)', conta:'Vestuário', valor:309.66},
+    {id:uid(), data:'2026-05-14', descricao:'Grupo Casas Bahia (07/10)', conta:'Vestuário', valor:309.66},
+    {id:uid(), data:'2026-06-14', descricao:'Grupo Casas Bahia (08/10)', conta:'Vestuário', valor:309.66},
+    {id:uid(), data:'2026-07-14', descricao:'Grupo Casas Bahia (09/10)', conta:'Vestuário', valor:309.66},
+    {id:uid(), data:'2026-08-14', descricao:'Grupo Casas Bahia (10/10)', conta:'Vestuário', valor:309.66},
+    {id:uid(), data:'2026-05-04', descricao:'Bemol (05/10)', conta:'Vestuário', valor:168.90},
+    {id:uid(), data:'2026-06-04', descricao:'Bemol (06/10)', conta:'Vestuário', valor:168.90},
+    {id:uid(), data:'2026-07-04', descricao:'Bemol (07/10)', conta:'Vestuário', valor:168.90},
+    {id:uid(), data:'2026-08-04', descricao:'Bemol (08/10)', conta:'Vestuário', valor:168.90},
+    {id:uid(), data:'2026-09-04', descricao:'Bemol (09/10)', conta:'Vestuário', valor:168.90},
+    {id:uid(), data:'2026-10-04', descricao:'Bemol (10/10)', conta:'Vestuário', valor:168.90},
+    {id:uid(), data:'2026-06-14', descricao:'Asya Fashion (04/05)', conta:'Vestuário', valor:163.98},
+    {id:uid(), data:'2026-07-14', descricao:'Asya Fashion (05/05)', conta:'Vestuário', valor:163.98},
+    {id:uid(), data:'2026-06-28', descricao:'Grupo Casas Bahia (03/10)', conta:'Vestuário', valor:105.34},
+    {id:uid(), data:'2026-07-28', descricao:'Grupo Casas Bahia (04/10)', conta:'Vestuário', valor:105.34},
+    {id:uid(), data:'2026-08-28', descricao:'Grupo Casas Bahia (05/10)', conta:'Vestuário', valor:105.34},
+    {id:uid(), data:'2026-09-28', descricao:'Grupo Casas Bahia (06/10)', conta:'Vestuário', valor:105.34},
+    {id:uid(), data:'2026-10-28', descricao:'Grupo Casas Bahia (07/10)', conta:'Vestuário', valor:105.34},
+    {id:uid(), data:'2026-11-28', descricao:'Grupo Casas Bahia (08/10)', conta:'Vestuário', valor:105.34},
+    {id:uid(), data:'2026-12-28', descricao:'Grupo Casas Bahia (09/10)', conta:'Vestuário', valor:105.34},
+    {id:uid(), data:'2026-07-07', descricao:'Asya Fashion (03/03)', conta:'Vestuário', valor:44.34},
+    {id:uid(), data:'2026-08-01', descricao:'Oboticário (02/08)', conta:'Perfume', valor:262.74},
+    {id:uid(), data:'2026-09-01', descricao:'Oboticário (03/08)', conta:'Perfume', valor:262.74},
+    {id:uid(), data:'2026-10-01', descricao:'Oboticário (04/08)', conta:'Perfume', valor:262.74},
+    {id:uid(), data:'2026-11-01', descricao:'Oboticário (05/08)', conta:'Perfume', valor:262.74},
+    {id:uid(), data:'2026-12-01', descricao:'Oboticário (06/08)', conta:'Perfume', valor:262.74},
+  ];
+  if(year===2027) return [
+    {id:uid(), data:'2027-01-28', descricao:'Grupo Casas Bahia (10/10)', conta:'Vestuário', valor:105.34},
+    {id:uid(), data:'2027-01-01', descricao:'Oboticário (07/08)', conta:'Perfume', valor:262.74},
+    {id:uid(), data:'2027-02-01', descricao:'Oboticário (08/08)', conta:'Perfume', valor:262.74},
+  ];
+  return [];
+}
+
+/* ---------------- STORAGE ---------------- */
+async function loadUsers(){
+  try{ const r = await storageGet('users'); users = JSON.parse(r.value); }
+  catch(e){ users = seedUsers(); await storageSet('users', JSON.stringify(users)); }
+}
+async function saveUsers(){ try{ await storageSet('users', JSON.stringify(users)); }catch(e){console.error(e);} }
+
+async function loadYear(username, year){
+  let despesas, entradas, cartao, eliene;
+  try{ const r = await storageGet(`despesas:${username}:${year}`); despesas = JSON.parse(r.value); }
+  catch(e){ despesas = seedDespesas(username); }
+  try{ const r = await storageGet(`entradas:${username}:${year}`); entradas = JSON.parse(r.value); }
+  catch(e){ entradas = seedEntradas(username); }
+  try{ const r = await storageGet(`cartao:${username}:${year}`); cartao = JSON.parse(r.value); }
+  catch(e){ cartao = seedCartao(username, year); }
+  // Migração única: se o cartão já tinha sido salvo vazio numa versão anterior do app
+  // (antes de existirem os lançamentos de julho), preenche uma única vez com o seed.
+  if(Array.isArray(cartao) && cartao.length===0){
+    let jaMigrado = false;
+    try{ const r = await storageGet(`cartaoSeedMigrado:${username}:${year}`); jaMigrado = JSON.parse(r.value)===true; }
+    catch(e){ jaMigrado = false; }
+    if(!jaMigrado){
+      cartao = seedCartao(username, year);
+      try{ await storageSet(`cartaoSeedMigrado:${username}:${year}`, JSON.stringify(true)); }catch(e){}
+    }
+  }
+  // Migração única: acrescenta as parcelas seguintes das compras parceladas (não duplica se já rodou antes).
+  try{
+    const flagParcelas = `cartaoParcelasAplicadas:${username}:${year}`;
+    let parcelasOk = false;
+    try{ const r = await storageGet(flagParcelas); parcelasOk = JSON.parse(r.value)===true; }
+    catch(e){ parcelasOk = false; }
+    if(!parcelasOk){
+      cartao = cartao.concat(seedCartaoParcelas(username, year));
+      await storageSet(flagParcelas, JSON.stringify(true));
+    }
+  }catch(e){}
+  // Migração única: correção da parcela final do QConcursos que faltava.
+  try{
+    const flagParcelas2 = `cartaoParcelas2Aplicadas:${username}:${year}`;
+    let parcelas2Ok = false;
+    try{ const r = await storageGet(flagParcelas2); parcelas2Ok = JSON.parse(r.value)===true; }
+    catch(e){ parcelas2Ok = false; }
+    if(!parcelas2Ok){
+      cartao = cartao.concat(seedCartaoParcelas2(username, year));
+      await storageSet(flagParcelas2, JSON.stringify(true));
+    }
+  }catch(e){}
+  // Migração única: acrescenta as contas que antes estavam sem divisão (Arlesson Célula, ILA Tintas, JIM.COM AMOCA).
+  try{
+    const flagExtras = `cartaoExtrasAplicados:${username}:${year}`;
+    let extrasOk = false;
+    try{ const r = await storageGet(flagExtras); extrasOk = JSON.parse(r.value)===true; }
+    catch(e){ extrasOk = false; }
+    if(!extrasOk){
+      cartao = cartao.concat(seedCartaoExtras(username, year));
+      await storageSet(flagExtras, JSON.stringify(true));
+    }
+  }catch(e){}
+  // Migração única: acrescenta as parcelas anteriores e seguintes dessas mesmas contas.
+  try{
+    const flagExtras2 = `cartaoExtras2Aplicados:${username}:${year}`;
+    let extras2Ok = false;
+    try{ const r = await storageGet(flagExtras2); extras2Ok = JSON.parse(r.value)===true; }
+    catch(e){ extras2Ok = false; }
+    if(!extras2Ok){
+      cartao = cartao.concat(seedCartaoExtras2(username, year));
+      await storageSet(flagExtras2, JSON.stringify(true));
+    }
+  }catch(e){}
+
+  try{ const r = await storageGet(`eliene:${year}`); eliene = JSON.parse(r.value); }
+  catch(e){ eliene = seedEliene(year); }
+  try{
+    const flagParcelasEliene = `elieneParcelasAplicadas:${year}`;
+    let parcelasElieneOk = false;
+    try{ const r = await storageGet(flagParcelasEliene); parcelasElieneOk = JSON.parse(r.value)===true; }
+    catch(e){ parcelasElieneOk = false; }
+    if(!parcelasElieneOk){
+      eliene = eliene.concat(seedElieneParcelas(year));
+      await storageSet(flagParcelasEliene, JSON.stringify(true));
+    }
+  }catch(e){}
+
+  state.year = year; state.despesas = despesas; state.entradas = entradas; state.cartao = cartao; state.eliene = eliene;
+  state.despesas.forEach(r=>{
+    if(!r.formaPagamento) r.formaPagamento = (r.categoria==='Crédito') ? 'Cartão de crédito' : 'Débito';
+  });
+  // Corrige lançamentos salvos no formato antigo ("Descrição — Conta" tudo junto),
+  // separando em dois campos, para ficar igual à planilha (Data / Descrição / Conta / Valor).
+  state.cartao.forEach(c=>{
+    if(!c.conta && c.descricao && c.descricao.includes(' — ')){
+      const partes = c.descricao.split(' — ');
+      c.conta = partes.pop();
+      c.descricao = partes.join(' — ');
+    }
+    if(c.conta===undefined) c.conta = '';
+  });
+  recalcCartaoDespesa();
+  await saveDespesas();
+  await saveCartao();
+  await saveEliene();
+}
+async function saveCartao(){ try{ await storageSet(`cartao:${currentUser.username}:${state.year}`, JSON.stringify(state.cartao)); }catch(e){console.error(e);} }
+async function saveEliene(){ try{ await storageSet(`eliene:${state.year}`, JSON.stringify(state.eliene)); }catch(e){console.error(e);} }
+
+/* A fatura do cartão fecha no dia 24: compras a partir do dia 25 já entram
+   na fatura do mês seguinte (ex: 25/06 a 24/07 = fatura de julho). */
+function mesFatura(dataStr){
+  const d = new Date(dataStr+'T00:00:00');
+  let mes = d.getMonth(), ano = d.getFullYear();
+  if(d.getDate() >= 25){
+    mes += 1;
+    if(mes > 11){ mes = 0; ano += 1; }
+  }
+  return { ano, mes };
+}
+
+/* Soma os lançamentos diários do cartão por fatura (mês de fechamento) e reflete
+   automaticamente na linha de despesa "Cartão de crédito (automático)" do usuário. */
+function recalcCartaoDespesa(){
+  const sums = zeros();
+  state.cartao.forEach(c=>{
+    if(!c.data) return;
+    const {ano, mes} = mesFatura(c.data);
+    if(ano===state.year) sums[mes] += (parseFloat(c.valor)||0);
+  });
+  let row = state.despesas.find(r=>r.auto==='cartao');
+  if(!row){
+    row = {id:uid(), subcategoria:'Cartão de crédito (automático)', categoria:'Crédito', tipoCusto:'Variável', valores:zeros(), auto:'cartao', formaPagamento:'Cartão de crédito'};
+    state.despesas.push(row);
+  }
+  row.formaPagamento = 'Cartão de crédito';
+  row.valores = sums;
+}
+async function loadInvest(username){
+  try{ const r = await storageGet(`invest:${username}`); state.invest = JSON.parse(r.value); }
+  catch(e){ state.invest = seedInvest(username); await saveInvest(); }
+}
+async function saveDespesas(){ try{ await storageSet(`despesas:${currentUser.username}:${state.year}`, JSON.stringify(state.despesas)); }catch(e){console.error(e);} }
+async function saveEntradas(){ try{ await storageSet(`entradas:${currentUser.username}:${state.year}`, JSON.stringify(state.entradas)); }catch(e){console.error(e);} }
+async function saveInvest(){ try{ await storageSet(`invest:${currentUser.username}`, JSON.stringify(state.invest)); }catch(e){console.error(e);} }
+
+function sumRow(v){ return v.reduce((a,b)=>a+(parseFloat(b)||0),0); }
+function monthTotals(list){
+  const totals = zeros();
+  list.forEach(r=> r.valores.forEach((v,i)=> totals[i]+= (parseFloat(v)||0)));
+  return totals;
+}
+function currentMonthIndex(){
+  const now = new Date();
+  if (state.year === now.getFullYear()) return now.getMonth();
+  return state.year < now.getFullYear() ? 11 : 0;
+}
+function destroyChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
+
+/* ================= LOGIN SCREEN ================= */
+function renderLogin(){
+  document.getElementById('root').innerHTML = `
+    <div id="loginScreen">
+      <div class="login-card">
+        <div class="brand">Controle A&amp;G</div>
+        <div class="brand-sub">${loginMode==='entrar' ? 'Entrar na sua conta' : 'Criar novo usuário'}</div>
+        <div id="loginBody"></div>
+      </div>
+    </div>
+  `;
+  const body = document.getElementById('loginBody');
+
+  if(loginMode==='entrar'){
+    body.innerHTML = `
+      <div class="user-pick" id="userPick"></div>
+      <div class="field"><label>Senha</label><input type="password" id="fPass" placeholder="Digite sua senha"></div>
+      <div class="login-error" id="loginErr"></div>
+      <button class="btn btn-full" id="btnLogin">Entrar</button>
+      <div class="login-toggle">Ainda não tem usuário? <a id="goCadastro">Cadastrar</a></div>
+      <div class="login-note">Este é um app de uso familiar. Os dados ficam salvos na nuvem do app e são visíveis para quem tiver o link e a senha de cada usuário — não é um sistema de segurança bancária.</div>
+    `;
+    const pick = document.getElementById('userPick');
+    if(!selectedUsername && users.length) selectedUsername = users[0].username;
+    users.forEach(u=>{
+      const chip = document.createElement('div');
+      chip.className = 'user-chip' + (u.username===selectedUsername ? ' active' : '');
+      chip.textContent = u.displayName;
+      chip.addEventListener('click', ()=>{ selectedUsername = u.username; renderLogin(); });
+      pick.appendChild(chip);
+    });
+    document.getElementById('btnLogin').addEventListener('click', doLogin);
+    document.getElementById('fPass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+    document.getElementById('goCadastro').addEventListener('click', ()=>{ loginMode='cadastrar'; renderLogin(); });
+  } else {
+    body.innerHTML = `
+      <div class="field"><label>Seu nome</label><input type="text" id="rName" placeholder="Ex: Giulianne"></div>
+      <div class="field"><label>Usuário (login)</label><input type="text" id="rUser" placeholder="ex: giulianne"></div>
+      <div class="field"><label>Senha</label><input type="password" id="rPass" placeholder="Crie uma senha"></div>
+      <div class="field"><label>Confirmar senha</label><input type="password" id="rPass2" placeholder="Repita a senha"></div>
+      <div class="login-error" id="loginErr"></div>
+      <button class="btn btn-full" id="btnRegister">Criar usuário</button>
+      <div class="login-toggle">Já tem usuário? <a id="goEntrar">Entrar</a></div>
+    `;
+    document.getElementById('btnRegister').addEventListener('click', doRegister);
+    document.getElementById('goEntrar').addEventListener('click', ()=>{ loginMode='entrar'; renderLogin(); });
+  }
+}
+
+async function doLogin(){
+  const pass = document.getElementById('fPass').value;
+  const u = users.find(x=>x.username===selectedUsername);
+  const err = document.getElementById('loginErr');
+  if(!u){ err.textContent = 'Selecione um usuário.'; return; }
+  if(u.password !== pass){ err.textContent = 'Senha incorreta.'; return; }
+  currentUser = { username:u.username, displayName:u.displayName };
+  await bootApp();
+}
+
+async function doRegister(){
+  const name = document.getElementById('rName').value.trim();
+  const username = document.getElementById('rUser').value.trim().toLowerCase().replace(/\s+/g,'');
+  const pass = document.getElementById('rPass').value;
+  const pass2 = document.getElementById('rPass2').value;
+  const err = document.getElementById('loginErr');
+  if(!name || !username || !pass){ err.textContent = 'Preencha todos os campos.'; return; }
+  if(pass !== pass2){ err.textContent = 'As senhas não coincidem.'; return; }
+  if(users.some(u=>u.username===username)){ err.textContent = 'Esse usuário já existe.'; return; }
+  users.push({username, displayName:name, password:pass});
+  await saveUsers();
+  selectedUsername = username;
+  loginMode = 'entrar';
+  renderLogin();
+}
+
+function logout(){
+  currentUser = null;
+  Object.keys(charts).forEach(destroyChart);
+  loginMode = 'entrar';
+  renderLogin();
+}
+
+/* ================= APP SHELL ================= */
+async function bootApp(){
+  await loadYear(currentUser.username, 2026);
+  await loadInvest(currentUser.username);
+  await loadEmprestimos();
+  state.month = currentMonthIndex();
+  renderShell();
+  setTab('painel');
+}
+
+/* Empréstimos e devoluções — lista única, compartilhada entre os dois usuários
+   (não é por ano nem por login, já que um empréstimo pode atravessar vários meses/anos). */
+async function loadEmprestimos(){
+  try{ const r = await storageGet('emprestimos'); state.emprestimos = JSON.parse(r.value); }
+  catch(e){ state.emprestimos = []; }
+}
+async function saveEmprestimos(){ try{ await storageSet('emprestimos', JSON.stringify(state.emprestimos)); }catch(e){console.error(e);} }
+
+function renderEmprestimos(){
+  const lista = (state.emprestimos||[]).slice().sort((a,b)=> (b.dataEmprestimo||'').localeCompare(a.dataEmprestimo||''));
+  const totalEmprestado = lista.reduce((a,e)=>a+(parseFloat(e.valorEmprestimo)||0),0);
+  const totalDevolvido = lista.reduce((a,e)=>a+(parseFloat(e.valorDevolucao)||0),0);
+  const saldoAberto = totalEmprestado - totalDevolvido;
+
+  document.getElementById('main').innerHTML = `
+    <h1 class="page-title">Empréstimos &amp; Devoluções</h1>
+    <p class="page-sub">Controle de dinheiro emprestado a alguém (ou por alguém) e o que já foi devolvido.</p>
+
+    <div class="cards-row">
+      <div class="card navy"><div class="label">Total emprestado</div><div class="value num">${BRL(totalEmprestado)}</div></div>
+      <div class="card teal"><div class="label">Total devolvido</div><div class="value num">${BRL(totalDevolvido)}</div></div>
+      <div class="card ${saldoAberto>0?'brick':'teal'}"><div class="label">Saldo em aberto</div><div class="value num">${BRL(saldoAberto)}</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="table-actions">
+        <h3 style="margin:0;">Lançamentos</h3>
+        <button class="btn small" id="addEmprestimo">+ Novo empréstimo</button>
+      </div>
+      <div class="table-scroll">
+        <table id="tblEmprestimos">
+          <thead><tr>
+            <th>Descrição</th><th>Usuário</th><th>Data do empréstimo</th><th>Data da devolução</th>
+            <th>Valor emprestado</th><th>Valor devolvido</th><th>Saldo</th><th></th>
+          </tr></thead>
+          <tbody>
+            ${lista.map(e=>{
+              const saldo = (parseFloat(e.valorEmprestimo)||0) - (parseFloat(e.valorDevolucao)||0);
+              return `
+              <tr data-id="${e.id}">
+                <td><input type="text" data-f="descricao" value="${e.descricao||''}"></td>
+                <td><input type="text" data-f="usuario" value="${e.usuario||''}"></td>
+                <td><input type="date" data-f="dataEmprestimo" value="${e.dataEmprestimo||''}"></td>
+                <td><input type="date" data-f="dataDevolucao" value="${e.dataDevolucao||''}"></td>
+                <td><input type="number" step="0.01" data-f="valorEmprestimo" value="${e.valorEmprestimo||0}"></td>
+                <td><input type="number" step="0.01" data-f="valorDevolucao" value="${e.valorDevolucao||0}"></td>
+                <td class="num" style="font-weight:700; color:${saldo>0?'var(--brick)':'var(--teal)'};">${BRL(saldo)}${saldo===0?' ✅':''}</td>
+                <td><button class="btn danger" data-del="1">✕</button></td>
+              </tr>`;
+            }).join('')}
+            <tr class="total-row"><td colspan="4">Total</td><td class="num">${BRL(totalEmprestado)}</td><td class="num">${BRL(totalDevolvido)}</td><td class="num">${BRL(saldoAberto)}</td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('addEmprestimo').addEventListener('click', ()=>{
+    state.emprestimos.push({id:uid(), descricao:'Novo empréstimo', usuario:currentUser.displayName, dataEmprestimo:new Date().toISOString().slice(0,10), dataDevolucao:'', valorEmprestimo:0, valorDevolucao:0});
+    saveEmprestimos(); renderEmprestimos();
+  });
+  document.querySelectorAll('#tblEmprestimos tbody tr[data-id]').forEach(tr=>{
+    const item = state.emprestimos.find(e=>e.id===tr.dataset.id);
+    tr.querySelector('[data-f=descricao]').addEventListener('input', e=>{ item.descricao=e.target.value; saveEmprestimos(); });
+    tr.querySelector('[data-f=usuario]').addEventListener('input', e=>{ item.usuario=e.target.value; saveEmprestimos(); });
+    tr.querySelector('[data-f=dataEmprestimo]').addEventListener('change', e=>{ item.dataEmprestimo=e.target.value; saveEmprestimos(); });
+    tr.querySelector('[data-f=dataDevolucao]').addEventListener('change', e=>{ item.dataDevolucao=e.target.value; saveEmprestimos(); });
+    tr.querySelector('[data-f=valorEmprestimo]').addEventListener('input', e=>{ item.valorEmprestimo=parseFloat(e.target.value)||0; saveEmprestimos(); renderEmprestimos(); });
+    tr.querySelector('[data-f=valorDevolucao]').addEventListener('input', e=>{ item.valorDevolucao=parseFloat(e.target.value)||0; saveEmprestimos(); renderEmprestimos(); });
+    tr.querySelector('[data-del]').addEventListener('click', ()=>{
+      state.emprestimos = state.emprestimos.filter(e=>e.id!==item.id);
+      saveEmprestimos(); renderEmprestimos();
+    });
+  });
+}
+
+/* ---------- FILTRO DE MÊS (reutilizado em todas as telas) ---------- */
+function monthFilterBar(selectId, label){
+  return `
+    <div class="panel" style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:16px 24px;">
+      <label style="font-size:12.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--ink-soft);">${label||'Mês'}</label>
+      <select class="cell" id="${selectId}" style="max-width:160px; border:1px solid var(--line); background:#fff;">
+        ${MESES.map((m,i)=>`<option value="${i}" ${i===state.month?'selected':''}>${m}</option>`).join('')}
+      </select>
+    </div>`;
+}
+function wireMonthFilter(selectId, onChange){
+  const el = document.getElementById(selectId);
+  if(!el) return;
+  el.addEventListener('change', e=>{
+    state.month = parseInt(e.target.value);
+    onChange();
+  });
+}
+
+function renderShell(){
+  document.getElementById('root').innerHTML = `
+    <div id="shell">
+      <div id="sidebar">
+        <div class="brand">Controle A&amp;G</div>
+        <div class="brand-sub">Finanças pessoais</div>
+        <div class="user-badge">
+          <div class="user-avatar">${initials(currentUser.displayName)}</div>
+          <div style="flex:1;">
+            <div class="uname">${currentUser.displayName}</div>
+            <div class="logout" id="btnLogout">Sair</div>
+          </div>
+          <button id="btnOcultarValores" title="${ocultarValores?'Mostrar valores':'Ocultar valores'}" style="background:none; border:none; cursor:pointer; color:#fff; font-size:18px; padding:4px;">${ocultarValores ? '🙈' : '👁️'}</button>
+        </div>
+        <div class="nav-item" data-tab="painel"><span class="dot"></span>Painel</div>
+        <div class="nav-item" data-tab="entradas"><span class="dot"></span>Entradas &amp; Saídas</div>
+        <div class="nav-item" data-tab="despesas"><span class="dot"></span>Despesas</div>
+        <div class="nav-item" data-tab="investimento"><span class="dot"></span>Investimentos</div>
+        <div class="nav-item" data-tab="casal"><span class="dot"></span>Casal</div>
+        <div class="nav-item" data-tab="ferias"><span class="dot"></span>Férias</div>
+        <div class="nav-item" data-tab="emprestimos"><span class="dot"></span>Empréstimos</div>
+        <div class="year-block">
+          <div class="year-label">Ano ativo</div>
+          <select id="yearSelect">${YEARS.map(y=>`<option value="${y}" ${y===state.year?'selected':''}>${y}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div id="main"></div>
+    </div>
+  `;
+  document.getElementById('btnLogout').addEventListener('click', logout);
+  document.getElementById('btnOcultarValores').addEventListener('click', ()=>{
+    ocultarValores = !ocultarValores;
+    renderShell();
+    setTab(activeTab);
+  });
+  document.querySelectorAll('.nav-item').forEach(item=>{
+    item.addEventListener('click', ()=> setTab(item.dataset.tab));
+  });
+  document.getElementById('yearSelect').addEventListener('change', async e=>{
+    await loadYear(currentUser.username, parseInt(e.target.value));
+    setTab(activeTab);
+  });
+}
+
+async function setTab(tab){
+  activeTab = tab;
+  document.querySelectorAll('.nav-item').forEach(n=> n.classList.toggle('active', n.dataset.tab===tab));
+  if(tab==='painel') renderPainel();
+  else if(tab==='entradas') renderEntradas();
+  else if(tab==='despesas') renderDespesas();
+  else if(tab==='investimento') renderInvestimento();
+  else if(tab==='casal') renderCasal();
+  else if(tab==='ferias') renderFerias();
+  else if(tab==='emprestimos') renderEmprestimos();
+}
+
+/* ---------- RENDER: PAINEL ---------- */
+function renderPainel(){
+  const despTot = monthTotals(state.despesas);
+  const entrTot = monthTotals(state.entradas);
+  const saldoMes = despTot.map((d,i)=> entrTot[i]-d);
+  const mIdx = state.month;
+  const totalEntradasAno = entrTot.reduce((a,b)=>a+b,0);
+  const totalDespesasAno = despTot.reduce((a,b)=>a+b,0);
+  const saldoAno = totalEntradasAno - totalDespesasAno;
+
+  const inv = state.invest;
+  const pct = Math.min(100, (inv.saldoAtual/inv.meta*100));
+
+  const porCategoria = {};
+  state.despesas.forEach(r=>{ porCategoria[r.categoria] = (porCategoria[r.categoria]||0) + sumRow(r.valores); });
+
+  document.getElementById('main').innerHTML = `
+    <h1 class="page-title">Painel de ${currentUser.displayName} — ${state.year}</h1>
+    <p class="page-sub">Visão geral de entradas, saídas e da caminhada até a meta.</p>
+
+    ${monthFilterBar('paMonthSelect')}
+
+    <div class="cards-row">
+      <div class="card teal"><div class="label">Entradas no mês (${MESES[mIdx]})</div><div class="value num">${BRL(entrTot[mIdx])}</div></div>
+      <div class="card brick"><div class="label">Saídas no mês (${MESES[mIdx]})</div><div class="value num">${BRL(despTot[mIdx])}</div></div>
+      <div class="card gold"><div class="label">Saldo do mês</div><div class="value num">${BRL(saldoMes[mIdx])}</div></div>
+      <div class="card navy"><div class="label">Meta 500k atingida</div><div class="value num">${pct.toFixed(1)}%</div></div>
+    </div>
+
+    <div class="panel-flex">
+      <div class="panel">
+        <h3>Entradas × Saídas ao longo do ano</h3>
+        <canvas id="chartFluxo" height="180"></canvas>
+      </div>
+      <div class="panel">
+        <h3>Despesas por categoria</h3>
+        <canvas id="chartCategoria" height="180"></canvas>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Resumo do ano</h3>
+      <div class="cards-row" style="margin-bottom:0;">
+        <div class="card"><div class="label">Total entradas ${state.year}</div><div class="value num" style="color:var(--teal)">${BRL(totalEntradasAno)}</div></div>
+        <div class="card"><div class="label">Total despesas ${state.year}</div><div class="value num" style="color:var(--brick)">${BRL(totalDespesasAno)}</div></div>
+        <div class="card"><div class="label">Saldo acumulado ${state.year}</div><div class="value num">${BRL(saldoAno)}</div></div>
+      </div>
+    </div>
+  `;
+
+  wireMonthFilter('paMonthSelect', renderPainel);
+
+  destroyChart('chartFluxo'); destroyChart('chartCategoria');
+  charts.chartFluxo = new Chart(document.getElementById('chartFluxo'), {
+    type:'bar',
+    data:{ labels:MESES, datasets:[
+      {label:'Entradas', data:entrTot, backgroundColor:'#1F7A5C'},
+      {label:'Saídas', data:despTot, backgroundColor:'#8FCBA8'},
+    ]},
+    options:{ responsive:true, plugins:{legend:{position:'bottom', labels:{font:{family:'IBM Plex Sans'}}}}, scales:{ y:{ ticks:{ callback:v=>'R$ '+v } } } }
+  });
+  const catLabels = Object.keys(porCategoria);
+  charts.chartCategoria = new Chart(document.getElementById('chartCategoria'), {
+    type:'doughnut',
+    data:{ labels:catLabels, datasets:[{ data:catLabels.map(c=>porCategoria[c]),
+      backgroundColor:['#0B4028','#1F7A5C','#2F7D52','#52B788','#74C69D','#95D5B2','#B7E4C7','#40916C','#2D6A4F','#1B4332','#84A98C','#CAD2C5'] }]},
+    options:{ responsive:true, plugins:{legend:{position:'bottom', labels:{boxWidth:10, font:{size:11,family:'IBM Plex Sans'}}}} }
+  });
+}
+
+/* ---------- RENDER: ENTRADAS & SAÍDAS ---------- */
+function renderEntradas(){
+  const despTot = monthTotals(state.despesas);
+  const entrTot = monthTotals(state.entradas);
+  const saldo = despTot.map((d,i)=> entrTot[i]-d);
+
+  document.getElementById('main').innerHTML = `
+    <h1 class="page-title">Entradas &amp; Saídas — ${currentUser.displayName} — ${state.year}</h1>
+    <p class="page-sub">Cadastre suas fontes de renda e acompanhe o saldo mês a mês.</p>
+
+    ${monthFilterBar('enMonthSelect')}
+
+    <div class="cards-row">
+      <div class="card teal"><div class="label">Entradas em ${MESES[state.month]}</div><div class="value num">${BRL(entrTot[state.month])}</div></div>
+      <div class="card brick"><div class="label">Saídas em ${MESES[state.month]}</div><div class="value num">${BRL(despTot[state.month])}</div></div>
+      <div class="card ${saldo[state.month]>=0?'teal':'brick'}"><div class="label">Saldo em ${MESES[state.month]}</div><div class="value num">${BRL(saldo[state.month])}</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="table-actions">
+        <h3 style="margin:0;">Entradas (renda)</h3>
+        <button class="btn small" id="addEntrada">+ Nova entrada</button>
+      </div>
+      <div class="table-scroll">
+        <table id="tblEntradas">
+          <thead><tr><th>Descrição</th>${MESES.map(m=>`<th>${m}</th>`).join('')}<th>Total</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Saldo mensal (Entradas − Saídas)</h3>
+      <canvas id="chartSaldo" height="140"></canvas>
+    </div>
+  `;
+  const tbody = document.querySelector('#tblEntradas tbody');
+  state.entradas.forEach(row=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" value="${row.descricao}" data-f="descricao"></td>
+      ${row.valores.map((v,i)=>`<td><input class="month-input" type="number" step="0.01" value="${v}" data-i="${i}"></td>`).join('')}
+      <td class="num">${BRL(sumRow(row.valores))}</td>
+      <td><button class="btn danger">✕</button></td>
+    `;
+    tr.querySelector('[data-f=descricao]').addEventListener('input', e=>{ row.descricao=e.target.value; saveEntradas(); });
+    tr.querySelectorAll('input[data-i]').forEach(inp=>{
+      inp.addEventListener('input', e=>{ row.valores[+e.target.dataset.i] = parseFloat(e.target.value)||0; saveEntradas(); renderEntradas(); });
+    });
+    tr.querySelector('.btn.danger').addEventListener('click', ()=>{ state.entradas = state.entradas.filter(r=>r.id!==row.id); saveEntradas(); renderEntradas(); });
+    tbody.appendChild(tr);
+  });
+  const totRow = document.createElement('tr'); totRow.className='total-row';
+  totRow.innerHTML = `<td>Total</td>${entrTot.map(v=>`<td class="num">${BRL(v)}</td>`).join('')}<td class="num">${BRL(entrTot.reduce((a,b)=>a+b,0))}</td><td></td>`;
+  tbody.appendChild(totRow);
+
+  document.getElementById('addEntrada').addEventListener('click', ()=>{
+    state.entradas.push({id:uid(), descricao:'Nova entrada', valores:zeros()});
+    saveEntradas(); renderEntradas();
+  });
+
+  wireMonthFilter('enMonthSelect', renderEntradas);
+
+  destroyChart('chartSaldo');
+  charts.chartSaldo = new Chart(document.getElementById('chartSaldo'), {
+    type:'line',
+    data:{ labels:MESES, datasets:[{ label:'Saldo', data:saldo, borderColor:'#2F7D52', backgroundColor:'rgba(47,125,82,.15)', fill:true, tension:.3, pointRadius:3 }]},
+    options:{ responsive:true, plugins:{legend:{display:false}} }
+  });
+}
+
+/* ---------- RENDER: DESPESAS ---------- */
+function renderDespesas(){
+  const despTot = monthTotals(state.despesas);
+
+  const totalCartaoDespesasMes = state.despesas.reduce((a,r)=> a + (r.formaPagamento==='Cartão de crédito' ? (parseFloat(r.valores[state.month])||0) : 0), 0);
+  const totalDebitoMes = state.despesas.reduce((a,r)=> a + (r.formaPagamento!=='Cartão de crédito' ? (parseFloat(r.valores[state.month])||0) : 0), 0);
+
+  const cartaoDoMes = state.cartao
+    .filter(c=>{ if(!c.data) return false; const {ano,mes}=mesFatura(c.data); return ano===state.year && mes===state.month; })
+    .sort((a,b)=> (a.data||'').localeCompare(b.data||''));
+  const totalCartaoMes = cartaoDoMes.reduce((a,c)=>a+(parseFloat(c.valor)||0),0);
+
+  const elieneDoMes = (state.eliene||[])
+    .filter(c=>{ if(!c.data) return false; const {ano,mes}=mesFatura(c.data); return ano===state.year && mes===state.month; })
+    .sort((a,b)=> (a.data||'').localeCompare(b.data||''));
+  const totalElieneMes = elieneDoMes.reduce((a,c)=>a+(parseFloat(c.valor)||0),0);
+
+  document.getElementById('main').innerHTML = `
+    <h1 class="page-title">Despesas — ${currentUser.displayName} — ${state.year}</h1>
+    <p class="page-sub">Cadastre e classifique cada despesa por categoria, tipo de custo e forma de pagamento.</p>
+
+    ${monthFilterBar('deMonthSelect')}
+
+    <div class="cards-row">
+      <div class="card brick"><div class="label">Total de despesas em ${MESES[state.month]}</div><div class="value num">${BRL(despTot[state.month])}</div></div>
+      <div class="card gold"><div class="label">Pago no cartão de crédito — ${MESES[state.month]}</div><div class="value num">${BRL(totalCartaoDespesasMes)}</div></div>
+      <div class="card navy"><div class="label">Pago no débito — ${MESES[state.month]}</div><div class="value num">${BRL(totalDebitoMes)}</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="table-actions">
+        <h3 style="margin:0;">Despesas cadastradas</h3>
+        <button class="btn small" id="addDespesa">+ Nova despesa</button>
+      </div>
+      <div class="table-scroll">
+        <table id="tblDespesas">
+          <thead><tr>
+            <th>Subcategoria</th><th>Categoria</th><th>Tipo de custo</th><th>Pagamento</th>
+            ${MESES.map(m=>`<th>${m}</th>`).join('')}<th>Total</th><th></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="table-actions">
+        <h3 style="margin:0;">Cartão de crédito — lançamentos diários (${MESES[state.month]})</h3>
+        <button class="btn small" id="addCartao">+ Novo lançamento</button>
+      </div>
+      <p class="muted">Cada lançamento é somado automaticamente na despesa "Cartão de crédito (automático)" da fatura correspondente, na tabela acima. A fatura fecha no dia 24: compras a partir do dia 25 já entram na fatura do mês seguinte.</p>
+      <div class="table-scroll">
+        <table id="tblCartao">
+          <thead><tr><th>Data</th><th>Descrição</th><th>Conta</th><th>Valor</th><th></th></tr></thead>
+          <tbody>
+            ${cartaoDoMes.map(c=>`
+              <tr data-id="${c.id}">
+                <td><input type="date" data-f="data" value="${c.data}"></td>
+                <td><input type="text" data-f="descricao" value="${c.descricao}"></td>
+                <td><input type="text" data-f="conta" value="${c.conta||''}"></td>
+                <td><input type="number" step="0.01" data-f="valor" value="${c.valor}"></td>
+                <td><button class="btn danger" data-del="1">✕</button></td>
+              </tr>
+            `).join('')}
+            <tr class="total-row"><td colspan="3">Total do mês</td><td class="num">${BRL(totalCartaoMes)}</td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="table-actions">
+        <h3 style="margin:0;">Despesas da Eliene — só informativo (${MESES[state.month]})</h3>
+        <button class="btn small" id="addEliene">+ Novo lançamento</button>
+      </div>
+      <p class="muted">Esta tabela é só para consulta: os valores aqui <strong>não somam</strong> no total de despesas de ${currentUser.displayName} nem no cartão de crédito acima.</p>
+      <div class="table-scroll">
+        <table id="tblEliene">
+          <thead><tr><th>Data</th><th>Descrição</th><th>Conta</th><th>Valor</th><th></th></tr></thead>
+          <tbody>
+            ${elieneDoMes.map(c=>`
+              <tr data-id="${c.id}">
+                <td><input type="date" data-f="data" value="${c.data}"></td>
+                <td><input type="text" data-f="descricao" value="${c.descricao}"></td>
+                <td><input type="text" data-f="conta" value="${c.conta||''}"></td>
+                <td><input type="number" step="0.01" data-f="valor" value="${c.valor}"></td>
+                <td><button class="btn danger" data-del="1">✕</button></td>
+              </tr>
+            `).join('')}
+            <tr class="total-row"><td colspan="3">Total do mês (informativo)</td><td class="num">${BRL(totalElieneMes)}</td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  wireMonthFilter('deMonthSelect', renderDespesas);
+
+  const tbody = document.querySelector('#tblDespesas tbody');
+  state.despesas.forEach(row=>{
+    const tr = document.createElement('tr');
+    const isAuto = row.auto==='cartao';
+    tr.innerHTML = `
+      <td>${isAuto ? `<span title="Somado automaticamente a partir dos lançamentos do cartão">🔒 ${row.subcategoria}</span>` : `<input type="text" value="${row.subcategoria}" data-f="subcategoria">`}</td>
+      <td>${isAuto ? row.categoria : `<select class="cell" data-f="categoria">${CATEGORIAS.map(c=>`<option ${c===row.categoria?'selected':''}>${c}</option>`).join('')}</select>`}</td>
+      <td>${isAuto ? row.tipoCusto : `<select class="cell" data-f="tipoCusto">${TIPOS_CUSTO.map(c=>`<option ${c===row.tipoCusto?'selected':''}>${c}</option>`).join('')}</select>`}</td>
+      <td>${isAuto ? '🔒 Cartão de crédito' : `<select class="cell" data-f="formaPagamento">${FORMAS_PAGAMENTO.map(c=>`<option ${c===row.formaPagamento?'selected':''}>${c}</option>`).join('')}</select>`}</td>
+      ${row.valores.map((v,i)=> isAuto ? `<td class="num">${BRL(v)}</td>` : `<td><input class="month-input" type="number" step="0.01" value="${v}" data-i="${i}"></td>`).join('')}
+      <td class="num">${BRL(sumRow(row.valores))}</td>
+      <td>${isAuto ? '' : '<button class="btn danger">✕</button>'}</td>
+    `;
+    if(!isAuto){
+      tr.querySelector('[data-f=subcategoria]').addEventListener('input', e=>{ row.subcategoria=e.target.value; saveDespesas(); });
+      tr.querySelector('[data-f=categoria]').addEventListener('change', e=>{
+        row.categoria=e.target.value;
+        if(row.categoria==='Crédito') row.formaPagamento='Cartão de crédito';
+        saveDespesas(); renderDespesas();
+      });
+      tr.querySelector('[data-f=tipoCusto]').addEventListener('change', e=>{ row.tipoCusto=e.target.value; saveDespesas(); });
+      tr.querySelector('[data-f=formaPagamento]').addEventListener('change', e=>{ row.formaPagamento=e.target.value; saveDespesas(); renderDespesas(); });
+      tr.querySelectorAll('input[data-i]').forEach(inp=>{
+        inp.addEventListener('input', e=>{ row.valores[+e.target.dataset.i] = parseFloat(e.target.value)||0; saveDespesas(); renderDespesas(); });
+      });
+      tr.querySelector('.btn.danger').addEventListener('click', ()=>{ state.despesas = state.despesas.filter(r=>r.id!==row.id); saveDespesas(); renderDespesas(); });
+    }
+    tbody.appendChild(tr);
+  });
+  const totRow = document.createElement('tr'); totRow.className='total-row';
+  totRow.innerHTML = `<td colspan="4">Total</td>${despTot.map(v=>`<td class="num">${BRL(v)}</td>`).join('')}<td class="num">${BRL(despTot.reduce((a,b)=>a+b,0))}</td><td></td>`;
+  tbody.appendChild(totRow);
+
+  document.getElementById('addDespesa').addEventListener('click', ()=>{
+    state.despesas.push({id:uid(), subcategoria:'Nova despesa', categoria:'Outros', tipoCusto:'Variável', formaPagamento:'Débito', valores:zeros()});
+    saveDespesas(); renderDespesas();
+  });
+
+  document.getElementById('addCartao').addEventListener('click', ()=>{
+    const hoje = new Date();
+    const dia = (state.year===hoje.getFullYear() && state.month===hoje.getMonth()) ? hoje.getDate() : 1;
+    const dataStr = `${state.year}-${String(state.month+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+    state.cartao.push({id:uid(), data:dataStr, descricao:'Nova compra', conta:'', valor:0});
+    recalcCartaoDespesa(); saveCartao(); saveDespesas(); renderDespesas();
+  });
+  document.querySelectorAll('#tblCartao tbody tr[data-id]').forEach(tr=>{
+    const item = state.cartao.find(c=>c.id===tr.dataset.id);
+    tr.querySelector('[data-f=descricao]').addEventListener('input', e=>{ item.descricao=e.target.value; saveCartao(); });
+    tr.querySelector('[data-f=conta]').addEventListener('input', e=>{ item.conta=e.target.value; saveCartao(); });
+    tr.querySelector('[data-f=data]').addEventListener('change', e=>{ item.data=e.target.value; recalcCartaoDespesa(); saveCartao(); saveDespesas(); renderDespesas(); });
+    tr.querySelector('[data-f=valor]').addEventListener('input', e=>{ item.valor=parseFloat(e.target.value)||0; recalcCartaoDespesa(); saveCartao(); saveDespesas(); renderDespesas(); });
+    tr.querySelector('[data-del]').addEventListener('click', ()=>{
+      state.cartao = state.cartao.filter(c=>c.id!==item.id);
+      recalcCartaoDespesa(); saveCartao(); saveDespesas(); renderDespesas();
+    });
+  });
+
+  document.getElementById('addEliene').addEventListener('click', ()=>{
+    const hoje = new Date();
+    const dia = (state.year===hoje.getFullYear() && state.month===hoje.getMonth()) ? hoje.getDate() : 1;
+    const dataStr = `${state.year}-${String(state.month+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+    state.eliene.push({id:uid(), data:dataStr, descricao:'Nova compra', conta:'', valor:0});
+    saveEliene(); renderDespesas();
+  });
+  document.querySelectorAll('#tblEliene tbody tr[data-id]').forEach(tr=>{
+    const item = state.eliene.find(c=>c.id===tr.dataset.id);
+    tr.querySelector('[data-f=descricao]').addEventListener('input', e=>{ item.descricao=e.target.value; saveEliene(); });
+    tr.querySelector('[data-f=conta]').addEventListener('input', e=>{ item.conta=e.target.value; saveEliene(); });
+    tr.querySelector('[data-f=data]').addEventListener('change', e=>{ item.data=e.target.value; saveEliene(); renderDespesas(); });
+    tr.querySelector('[data-f=valor]').addEventListener('input', e=>{ item.valor=parseFloat(e.target.value)||0; saveEliene(); renderDespesas(); });
+    tr.querySelector('[data-del]').addEventListener('click', ()=>{
+      state.eliene = state.eliene.filter(c=>c.id!==item.id);
+      saveEliene(); renderDespesas();
+    });
+  });
+}
+
+let feriasSelectedId = null;
+
+async function loadCasalYearData(year){
+  const out = {};
+  for(const u of users){
+    let despesas, entradas;
+    try{ const r = await storageGet(`despesas:${u.username}:${year}`); despesas = JSON.parse(r.value); }
+    catch(e){ despesas = seedDespesas(u.username); }
+    try{ const r = await storageGet(`entradas:${u.username}:${year}`); entradas = JSON.parse(r.value); }
+    catch(e){ entradas = seedEntradas(u.username); }
+    out[u.username] = { displayName:u.displayName, despesas, entradas };
+  }
+  return out;
+}
+
+function seedViagens(){
+  return [
+    {
+      id:uid(), nome:'Gramado', destino:'Gramado / Canela - RS',
+      dataInicio:'2026-06-01', dataFim:'2026-06-08', orcamento:11000,
+      itens:[
+        {id:uid(), categoria:'Passagem', descricao:'Passagens aéreas (ida e volta)', responsavel:'Ambos', valor:3202.07},
+        {id:uid(), categoria:'Transporte local', descricao:'Aluguel de carro', responsavel:'Ambos', valor:1133.07},
+        {id:uid(), categoria:'Hospedagem', descricao:'Airbnb', responsavel:'Ambos', valor:1297.66},
+        {id:uid(), categoria:'Passeio', descricao:'Mini Mundo + Snowland + Skyglass + Cascata + Bondinhos + Vinícola', responsavel:'Ambos', valor:1979},
+        {id:uid(), categoria:'Transporte local', descricao:'Estacionamento', responsavel:'Ambos', valor:180},
+        {id:uid(), categoria:'Alimentação', descricao:'Refeições durante a viagem', responsavel:'Ambos', valor:3155},
+      ]
+    }
+  ];
+}
+async function loadViagens(){
+  try{ const r = await storageGet('viagens'); return JSON.parse(r.value); }
+  catch(e){ const v = seedViagens(); await saveViagens(v); return v; }
+}
+async function saveViagens(v){ try{ await storageSet('viagens', JSON.stringify(v)); }catch(e){console.error(e);} }
+
+/* ---------- RENDER: CASAL ---------- */
+async function renderCasal(){
+  document.getElementById('main').innerHTML = `<div class="loading">Carregando dados do casal…</div>`;
+  const dados = await loadCasalYearData(state.year);
+  const nomes = Object.keys(dados);
+
+  const porPessoaMes = {};
+  nomes.forEach(u=>{
+    porPessoaMes[u] = {
+      entradas: monthTotals(dados[u].entradas),
+      despesas: monthTotals(dados[u].despesas),
+    };
+  });
+  const entradasCasal = zeros(), despesasCasal = zeros();
+  nomes.forEach(u=>{
+    porPessoaMes[u].entradas.forEach((v,i)=> entradasCasal[i]+=v);
+    porPessoaMes[u].despesas.forEach((v,i)=> despesasCasal[i]+=v);
+  });
+  const saldoCasal = entradasCasal.map((v,i)=> v-despesasCasal[i]);
+  const saldoAnoAcumulado = saldoCasal.reduce((a,b)=>a+b,0);
+
+  const mIdx = state.month;
+  const entradasMes = entradasCasal[mIdx], despesasMes = despesasCasal[mIdx], saldoMes = saldoCasal[mIdx];
+  const positivo = saldoMes >= 0;
+
+  document.getElementById('main').innerHTML = `
+    <h1 class="page-title">Casal — ${state.year}</h1>
+    <p class="page-sub">Visão conjunta de ${nomes.map(u=>dados[u].displayName).join(' + ')}, com filtro por mês.</p>
+
+    ${monthFilterBar('casalMonthSelect')}
+
+    <div class="cards-row">
+      <div class="card teal"><div class="label">Entradas do casal (${MESES[mIdx]})</div><div class="value num">${BRL(entradasMes)}</div></div>
+      <div class="card brick"><div class="label">Saídas do casal (${MESES[mIdx]})</div><div class="value num">${BRL(despesasMes)}</div></div>
+      <div class="card ${positivo?'teal':'brick'}">
+        <div class="label">Saldo do mês — ${positivo?'Positivo':'Negativo'}</div>
+        <div class="value num" style="color:${positivo?'var(--teal)':'var(--brick)'}">${positivo?'+':''}${BRL(saldoMes)}</div>
+      </div>
+      <div class="card navy"><div class="label">Saldo acumulado no ano</div><div class="value num">${BRL(saldoAnoAcumulado)}</div></div>
+    </div>
+
+    <div class="panel">
+      <h3>Comparativo por pessoa em ${MESES[mIdx]}</h3>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Pessoa</th><th>Entradas</th><th>Saídas</th><th>Saldo</th></tr></thead>
+          <tbody>
+            ${nomes.map(u=>{
+              const e = porPessoaMes[u].entradas[mIdx], d = porPessoaMes[u].despesas[mIdx], s = e-d;
+              return `<tr><td>${dados[u].displayName}</td><td class="num">${BRL(e)}</td><td class="num">${BRL(d)}</td><td class="num" style="color:${s>=0?'var(--teal)':'var(--brick)'}">${BRL(s)}</td></tr>`;
+            }).join('')}
+            <tr class="total-row"><td>Casal</td><td class="num">${BRL(entradasMes)}</td><td class="num">${BRL(despesasMes)}</td><td class="num" style="color:${positivo?'var(--teal)':'var(--brick)'}">${BRL(saldoMes)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Saldo do casal mês a mês — ${state.year}</h3>
+      <canvas id="chartCasal" height="150"></canvas>
+    </div>
+  `;
+
+  wireMonthFilter('casalMonthSelect', renderCasal);
+
+  destroyChart('chartCasal');
+  charts.chartCasal = new Chart(document.getElementById('chartCasal'), {
+    type:'bar',
+    data:{ labels:MESES, datasets:[{
+      label:'Saldo do casal', data:saldoCasal,
+      backgroundColor: saldoCasal.map(v=> v>=0 ? '#1F7A5C' : '#8FCBA8')
+    }]},
+    options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{ ticks:{ callback:v=>'R$ '+v } } } }
+  });
+}
+
+/* ---------- RENDER: FÉRIAS ---------- */
+async function renderFerias(){
+  document.getElementById('main').innerHTML = `<div class="loading">Carregando viagens…</div>`;
+  const viagens = await loadViagens();
+  if(!feriasSelectedId && viagens.length) feriasSelectedId = viagens[0].id;
+  const trip = viagens.find(v=>v.id===feriasSelectedId) || viagens[0];
+
+  let mesInfo = '';
+  if(trip && trip.dataInicio && trip.dataFim){
+    const ini = new Date(trip.dataInicio+'T00:00:00'), fim = new Date(trip.dataFim+'T00:00:00');
+    const alvo = new Date(state.year, state.month, 15);
+    const noPeriodo = alvo>=new Date(ini.getFullYear(),ini.getMonth(),1) && alvo<=new Date(fim.getFullYear(),fim.getMonth(),28);
+    mesInfo = `<p class="muted">${noPeriodo ? `✅ Esta viagem passa por ${MESES[state.month]}/${state.year}.` : `Esta viagem não ocorre em ${MESES[state.month]}/${state.year}.`}</p>`;
+  }
+
+  document.getElementById('main').innerHTML = `
+    <h1 class="page-title">Férias</h1>
+    <p class="page-sub">Planejamento e custos da viagem programada do casal.</p>
+
+    ${monthFilterBar('ferMonthSelect')}
+    ${mesInfo}
+
+    <div class="panel" style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:16px 24px;">
+      <label style="font-size:12.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--ink-soft);">Viagem</label>
+      <select class="cell" id="tripSelect" style="max-width:220px; border:1px solid var(--line); background:#fff;">
+        ${viagens.map(v=>`<option value="${v.id}" ${v.id===trip?.id?'selected':''}>${v.nome}</option>`).join('')}
+      </select>
+      <button class="btn small ghost" id="addTrip">+ Nova viagem</button>
+      ${trip ? '<button class="btn small danger" id="delTrip">Excluir esta viagem</button>' : ''}
+    </div>
+
+    ${trip ? renderTripDetail(trip) : '<div class="panel">Nenhuma viagem cadastrada ainda.</div>'}
+  `;
+
+  document.getElementById('tripSelect').addEventListener('change', e=>{ feriasSelectedId = e.target.value; renderFerias(); });
+  wireMonthFilter('ferMonthSelect', renderFerias);
+  document.getElementById('addTrip').addEventListener('click', async ()=>{
+    const nova = {id:uid(), nome:'Nova viagem', destino:'', dataInicio:'', dataFim:'', orcamento:0, itens:[]};
+    viagens.push(nova); feriasSelectedId = nova.id;
+    await saveViagens(viagens); renderFerias();
+  });
+  if(trip){
+    document.getElementById('delTrip').addEventListener('click', async ()=>{
+      const idx = viagens.findIndex(v=>v.id===trip.id);
+      viagens.splice(idx,1);
+      feriasSelectedId = viagens.length ? viagens[0].id : null;
+      await saveViagens(viagens); renderFerias();
+    });
+    wireTripDetail(trip, viagens);
+  }
+}
+
+function renderTripDetail(trip){
+  const total = trip.itens.reduce((a,i)=>a+(parseFloat(i.valor)||0),0);
+  const restante = trip.orcamento - total;
+  const dentroOrcamento = restante >= 0;
+  const porResp = {};
+  trip.itens.forEach(i=>{ porResp[i.responsavel] = (porResp[i.responsavel]||0) + (parseFloat(i.valor)||0); });
+
+  return `
+    <div class="panel">
+      <h3>Dados da viagem</h3>
+      <div class="inputs-grid">
+        <div class="field"><label>Nome</label><input type="text" id="fNome" value="${trip.nome}"></div>
+        <div class="field"><label>Destino</label><input type="text" id="fDestino" value="${trip.destino}"></div>
+        <div class="field"><label>Data de ida</label><input type="date" id="fIni" value="${trip.dataInicio}"></div>
+        <div class="field"><label>Data de volta</label><input type="date" id="fFim" value="${trip.dataFim}"></div>
+        <div class="field"><label>Orçamento (R$)</label><input type="number" step="0.01" id="fOrcamento" value="${trip.orcamento}"></div>
+      </div>
+    </div>
+
+    <div class="cards-row">
+      <div class="card brick"><div class="label">Total já planejado/gasto</div><div class="value num">${BRL(total)}</div></div>
+      <div class="card gold"><div class="label">Orçamento</div><div class="value num">${BRL(trip.orcamento)}</div></div>
+      <div class="card ${dentroOrcamento?'teal':'brick'}">
+        <div class="label">${dentroOrcamento?'Dentro do orçamento':'Acima do orçamento'}</div>
+        <div class="value num" style="color:${dentroOrcamento?'var(--teal)':'var(--brick)'}">${dentroOrcamento?'+':''}${BRL(restante)}</div>
+      </div>
+      ${Object.keys(porResp).map(r=>`<div class="card navy"><div class="label">Gasto — ${r}</div><div class="value num">${BRL(porResp[r])}</div></div>`).join('')}
+    </div>
+
+    <div class="panel">
+      <div class="table-actions">
+        <h3 style="margin:0;">Itens da viagem</h3>
+        <button class="btn small" id="addItem">+ Novo item</button>
+      </div>
+      <div class="table-scroll">
+        <table id="tblItens">
+          <thead><tr><th>Categoria</th><th>Descrição</th><th>Responsável</th><th>Valor</th><th></th></tr></thead>
+          <tbody>
+            ${trip.itens.map(i=>`
+              <tr data-id="${i.id}">
+                <td><select class="cell" data-f="categoria">${['Passagem','Hospedagem','Transporte local','Passeio','Alimentação','Outros'].map(c=>`<option ${c===i.categoria?'selected':''}>${c}</option>`).join('')}</select></td>
+                <td><input type="text" data-f="descricao" value="${i.descricao}"></td>
+                <td><select class="cell" data-f="responsavel">${['Ambos','Alafan','Giulianne'].map(c=>`<option ${c===i.responsavel?'selected':''}>${c}</option>`).join('')}</select></td>
+                <td><input type="number" step="0.01" data-f="valor" value="${i.valor}"></td>
+                <td><button class="btn danger" data-del="1">✕</button></td>
+              </tr>
+            `).join('')}
+            <tr class="total-row"><td colspan="3">Total</td><td class="num">${BRL(total)}</td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function wireTripDetail(trip, viagens){
+  const persist = async ()=>{ await saveViagens(viagens); };
+  document.getElementById('fNome').addEventListener('input', e=>{ trip.nome=e.target.value; persist(); });
+  document.getElementById('fDestino').addEventListener('input', e=>{ trip.destino=e.target.value; persist(); });
+  document.getElementById('fIni').addEventListener('input', e=>{ trip.dataInicio=e.target.value; persist(); });
+  document.getElementById('fFim').addEventListener('input', e=>{ trip.dataFim=e.target.value; persist(); });
+  document.getElementById('fOrcamento').addEventListener('input', e=>{ trip.orcamento=parseFloat(e.target.value)||0; persist(); renderFerias(); });
+
+  document.getElementById('addItem').addEventListener('click', ()=>{
+    trip.itens.push({id:uid(), categoria:'Outros', descricao:'Novo item', responsavel:'Ambos', valor:0});
+    persist(); renderFerias();
+  });
+  document.querySelectorAll('#tblItens tbody tr[data-id]').forEach(tr=>{
+    const item = trip.itens.find(i=>i.id===tr.dataset.id);
+    tr.querySelectorAll('[data-f]').forEach(el=>{
+      const ev = el.tagName==='SELECT' ? 'change' : 'input';
+      el.addEventListener(ev, e=>{
+        const f = el.dataset.f;
+        item[f] = f==='valor' ? (parseFloat(e.target.value)||0) : e.target.value;
+        persist();
+        if(f==='valor' || f==='responsavel') renderFerias();
+      });
+    });
+    tr.querySelector('[data-del]').addEventListener('click', ()=>{
+      trip.itens = trip.itens.filter(i=>i.id!==item.id);
+      const idx = viagens.findIndex(v=>v.id===trip.id); viagens[idx]=trip;
+      persist(); renderFerias();
+    });
+  });
+}
+
+/* ---------- RENDER: INVESTIMENTO ---------- */
+function projectInvestment(saldo, aporte, taxaPct, meta, maxMonths=480){
+  const r = taxaPct/100;
+  const path = [saldo];
+  let m = 0;
+  let cur = saldo;
+  while(cur < meta && m < maxMonths){
+    cur = cur*(1+r) + aporte;
+    m++;
+    path.push(cur);
+  }
+  return { months:m, path, reached: cur>=meta };
+}
+
+function renderInvestimento(){
+  const inv = state.invest;
+  const proj = projectInvestment(inv.saldoAtual, inv.aporteMensal, inv.taxaMensal, inv.meta);
+  const years = Math.floor(proj.months/12), months = proj.months%12;
+  const dataBase = new Date(inv.dataBase || Date.now());
+  const dataMeta = new Date(dataBase); dataMeta.setMonth(dataMeta.getMonth()+proj.months);
+  const pct = Math.min(100, inv.saldoAtual/inv.meta*100);
+
+  const dataAlvo = new Date(state.year, state.month, 1);
+  const diffMonths = (dataAlvo.getFullYear()-dataBase.getFullYear())*12 + (dataAlvo.getMonth()-dataBase.getMonth());
+  const projMes = (diffMonths>=0 && diffMonths<proj.path.length) ? proj.path[diffMonths] : null;
+
+  document.getElementById('main').innerHTML = `
+    <h1 class="page-title">Investimentos — ${currentUser.displayName}</h1>
+    <p class="page-sub">Previsão de quando você atinge a meta de ${BRL(inv.meta)}, com base no aporte mensal e na rentabilidade esperada.</p>
+
+    ${monthFilterBar('invMonthSelect')}
+
+    <div class="cards-row">
+      <div class="card teal"><div class="label">Patrimônio projetado — ${MESES[state.month]}/${state.year}</div><div class="value num">${projMes!==null ? BRL(projMes) : 'Fora do período calculado'}</div></div>
+    </div>
+
+    <div class="panel">
+      <h3>Parâmetros</h3>
+      <div class="inputs-grid">
+        <div class="field"><label>Saldo investido hoje</label><input type="number" step="0.01" id="fSaldo" value="${inv.saldoAtual}"></div>
+        <div class="field"><label>Aporte mensal (R$)</label><input type="number" step="0.01" id="fAporte" value="${inv.aporteMensal}"></div>
+        <div class="field"><label>Rentabilidade ao mês (%)</label><input type="number" step="0.01" id="fTaxa" value="${inv.taxaMensal}"></div>
+        <div class="field"><label>Meta (R$)</label><input type="number" step="1000" id="fMeta" value="${inv.meta}"></div>
+        <div class="field"><label>Data base do saldo</label><input type="date" id="fData" value="${inv.dataBase}"></div>
+      </div>
+      <button class="btn small" id="saveInv">Salvar e recalcular</button>
+    </div>
+
+    <div class="cards-row">
+      <div class="card teal"><div class="label">Progresso da meta</div><div class="value num">${pct.toFixed(1)}%</div></div>
+      <div class="card gold"><div class="label">Tempo estimado</div><div class="value num">${years}a ${months}m</div></div>
+      <div class="card navy"><div class="label">Meta prevista para</div><div class="value num">${dataMeta.toLocaleDateString('pt-BR',{month:'short', year:'numeric'})}</div></div>
+      <div class="card brick"><div class="label">Falta acumular</div><div class="value num">${BRL(Math.max(0,inv.meta-inv.saldoAtual))}</div></div>
+    </div>
+
+    <div class="panel">
+      <h3>Da posição atual até ${BRL(inv.meta)}</h3>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%;"></div></div>
+      <div class="muted">${BRL(inv.saldoAtual)} acumulados de ${BRL(inv.meta)}</div>
+    </div>
+
+    <div class="panel">
+      <h3>Projeção de crescimento do patrimônio</h3>
+      <canvas id="chartInvest" height="160"></canvas>
+      <p class="muted" style="margin-top:10px;">Projeção com aporte fixo mensal de ${BRL(inv.aporteMensal)} e rentabilidade de ${inv.taxaMensal}% ao mês, juros compostos sobre o saldo já investido.</p>
+    </div>
+  `;
+
+  document.getElementById('saveInv').addEventListener('click', async ()=>{
+    inv.saldoAtual = parseFloat(document.getElementById('fSaldo').value)||0;
+    inv.aporteMensal = parseFloat(document.getElementById('fAporte').value)||0;
+    inv.taxaMensal = parseFloat(document.getElementById('fTaxa').value)||0;
+    inv.meta = parseFloat(document.getElementById('fMeta').value)||500000;
+    inv.dataBase = document.getElementById('fData').value;
+    await saveInvest();
+    renderInvestimento();
+  });
+
+  wireMonthFilter('invMonthSelect', renderInvestimento);
+
+  const labels = proj.path.map((_,i)=> {
+    const d = new Date(dataBase); d.setMonth(d.getMonth()+i);
+    return d.toLocaleDateString('pt-BR',{month:'short', year:'2-digit'});
+  }).filter((_,i)=> i % Math.max(1,Math.floor(proj.path.length/24)) === 0 || i===proj.path.length-1);
+  const dataPts = proj.path.filter((_,i)=> i % Math.max(1,Math.floor(proj.path.length/24)) === 0 || i===proj.path.length-1);
+
+  destroyChart('chartInvest');
+  charts.chartInvest = new Chart(document.getElementById('chartInvest'), {
+    type:'line',
+    data:{ labels, datasets:[
+      { label:'Patrimônio projetado', data:dataPts, borderColor:'#0B4028', backgroundColor:'rgba(11,64,40,.12)', fill:true, tension:.25, pointRadius:2 },
+      { label:'Meta', data:dataPts.map(()=>inv.meta), borderColor:'#2F7D52', borderDash:[6,4], pointRadius:0 }
+    ]},
+    options:{ responsive:true, plugins:{legend:{position:'bottom'}}, scales:{ y:{ ticks:{ callback:v=>'R$ '+(v/1000)+'k' } } } }
+  });
+}
+
+/* ---------------- INIT ---------------- */
+async function init(){
+  try{ await loadUsers(); }
+  catch(e){ console.error('Falha ao carregar usuários, usando padrão:', e); users = seedUsers(); }
+  renderLogin();
+}
+init();
+</script>
+</body>
+</html>
